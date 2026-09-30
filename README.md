@@ -68,7 +68,7 @@ The bot runs entirely on GitHub Actions, so there's no server to maintain.
 To change the posting time, edit the `cron` line in [`post.yml`](./.github/workflows/post.yml). Times are in UTC, and [crontab.guru](https://crontab.guru/) is handy for checking them. Scheduled runs often start a few minutes late.
 
 > [!NOTE]
-> GitHub automatically disables scheduled workflows after 60 days with no commits to the repo, and emails you first. If the bot goes quiet, check the **Actions** tab and click **Enable workflow**.
+> GitHub disables scheduled workflows after 60 days with no commits to the repo. To prevent that, the workflow's `keepalive` job re-enables the workflow through the GitHub API on every run, which resets the timer. If the bot ever goes quiet anyway, check the **Actions** tab and click **Enable workflow**.
 
 ## Credits
 

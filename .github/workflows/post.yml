@@ -22,3 +22,16 @@ jobs:
           BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
           BSKY_PASSWORD: ${{ secrets.BSKY_PASSWORD }}
           TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
+
+  # GitHub disables scheduled workflows after 60 days without repo activity.
+  # Re-enabling the workflow through the API resets that timer, so running
+  # this daily keeps the schedule alive without needing dummy commits.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Re-enable this workflow
+        run: gh api --method PUT "repos/${{ github.repository }}/actions/workflows/post.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
