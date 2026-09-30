@@ -1,123 +1,80 @@
-# Build your own Bluesky bot 🦋
+# Movie Releases Bot 🎬🦋
 
-This is a template repo for building [Bluesky](https://bsky.app/) bots that post on their own schedule. It uses [TypeScript](https://www.typescriptlang.org/) to build the bot and [GitHub Actions](https://docs.github.com/en/actions) to schedule the posts.
+A [Bluesky](https://bsky.app/) bot that posts the most popular movie releasing each day.
 
-* [How to use](#how-to-use)
-  * [Things you will need](#things-you-will-need)
-    * [A Bluesky account](#a-bluesky-account)
-    * [Node.js](#nodejs)
-  * [Create a new repository from this template](#create-a-new-repository-from-this-template)
-  * [Running locally to test](#running-locally-to-test)
-  * [Create your own posts](#create-your-own-posts)
-  * [Deploy](#deploy)
-    * [Schedule](#schedule)
-    * [Environment variables](#environment-variables)
-  * [Set it live](#set-it-live)
+Follow it at [@movie-releases.bsky.social](https://bsky.app/profile/movie-releases.bsky.social).
 
-
-## How to use
-
-### Things you will need
-
-#### A Bluesky account
-
-To use this repo you will need a [Bluesky account](https://bsky.app/). [Sign up for an invite here](https://bsky.app/).
-
-Once you have an account for your bot, you will need to know your bot's handle and password (I recommend using an App Password, which you can create under your account's settings).
-
-#### Node.js
-
-To run this bot locally on your own machine you will need [Node.js](https://nodejs.org/en) version 18.16.0.
-
-### Create a new repository from this template
-
-Create your own project by clicking "Use this template" on GitHub and then "Create a new repository". Select an owner and give your new repository a name and an optional description. Then click "Create repository from template".
-
-Clone your new repository to your own machine.
-
-```sh
-git clone git@github.com:${YOUR_USERNAME}/${YOUR_REPO_NAME}.git
-cd ${YOUR_REPO_NAME}
-```
-
-### Running locally to test
-
-To run the bot locally you will need to install the dependencies:
-
-```sh
-npm install
-```
-
-Copy the `.env.example` file to `.env`.
-
-```sh
-cp .env.example .env
-```
-
-Fill in `.env` with your Bluesky handle and password.
-
-Build the project with:
-
-```sh
-npm run build
-```
-
-You can now run the bot locally with the command:
-
-```sh
-npm run dev
-```
-
-This will use your credentials to connect to Bluesky, but it *won't actually create a post yet*. If your credentials are correct, you should see the following printed to your terminal:
+Every morning it asks [The Movie Database (TMDB)](https://www.themoviedb.org/) for movies with a release date of today, picks the most popular one, and posts its title and a short synopsis:
 
 ```
-[TIMESTAMP] Posted: "Hello from the Bluesky API"
+Released today: Verity
+
+Lowen Ashleigh is hired by Jeremy Crawford to ghostwrite novels for his bestselling author wife Verity, who is unable to finish following an accident. Lowen gradually uncovers Verity's disturbing truths while residin...
+
+Retrieved via The Movie Database API (themoviedb.org).
 ```
 
-To have the bot create a post to your Bluesky account, in `index.ts` change line 4 to remove the `{ dryRun: true }` object:
+On days with no releases, the bot skips posting.
 
-```diff
-- const text = await Bot.run(getPostText, { dryRun: true });
-+ const text = await Bot.run(getPostText);
-```
+## How it works
 
-Build the project again, then run the command to create a post to actually create the post with the API:
+- [`src/lib/getPostText.ts`](./src/lib/getPostText.ts) queries TMDB's `/discover/movie` endpoint for today's date (UTC), sorted by popularity, and formats the top result. It trims long synopses so the post stays under Bluesky's 300-character limit.
+- [`src/lib/bot.ts`](./src/lib/bot.ts) logs in to Bluesky with [`@atproto/api`](https://www.npmjs.com/package/@atproto/api) and publishes the post.
+- [`.github/workflows/post.yml`](./.github/workflows/post.yml) runs the bot on a schedule with GitHub Actions, daily at 13:08 UTC.
 
-```sh
-npm run build
-npm run dev
-```
+## Running locally
 
-### Create your own posts
+You'll need [Node.js](https://nodejs.org/) 22 (see [`.nvmrc`](./.nvmrc)), a Bluesky account for the bot, and a TMDB account.
 
-Currently the bot calls on the function [`getPostText`](./src/lib/getPostText.ts) to get the text that it should post. This function returns the text "Hello from the Bluesky API" every time.
+1. Install dependencies:
 
-To create your own posts you need to provide your own implementation of `getPostText`. You can do anything you want to generate posts, the `getPostText` function just needs to return a string or a Promise that resolves to a string.
+   ```sh
+   npm install
+   ```
 
-### Deploy
+2. Copy `.env.example` to `.env` and fill it in:
 
-Once you have built your bot, the only thing left to do is to choose the schedule and set up the environment variables in GitHub Actions.
+   ```sh
+   cp .env.example .env
+   ```
 
-#### Schedule
+   | Variable        | What it is |
+   | --------------- | ---------- |
+   | `BSKY_HANDLE`   | The bot's Bluesky handle, e.g. `movie-releases.bsky.social` |
+   | `BSKY_PASSWORD` | A Bluesky [App Password](https://bsky.app/settings/app-passwords) for the bot account, not the main account password |
+   | `TMDB_TOKEN`    | Your TMDB **API Read Access Token** (the long one starting with `eyJ`), from [TMDB API settings](https://www.themoviedb.org/settings/api). The shorter "API Key" won't work. |
 
-The schedule is controlled by the GitHub Actions workflow in [./.github/workflows/post.yml](./.github/workflows/post.yml). The [schedule trigger](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule) uses cron syntax to schedule when the workflow runs and your bot posts. [Crontab Guru](https://crontab.guru/) is a good way to visualise it.
+3. Build and run:
 
-For example, the following YAML will schedule your bot to post at 5:30 and 17:30 every day.
+   ```sh
+   npm run build
+   npm run dev
+   ```
 
-```yml
-on:
-  schedule:
-    - cron: "30 5,17 * * *"
-```
+> [!WARNING]
+> `npm run dev` posts to Bluesky for real. To preview the post without publishing it, temporarily change the call in [`src/index.ts`](./src/index.ts) to:
+>
+> ```ts
+> const text = await Bot.run(getPostText, { dryRun: true });
+> ```
 
-Be warned that many GitHub Actions jobs are scheduled to happen on the hour, so that is a busy time and may see your workflow run later than expected or be dropped entirely.
+## Deploying
 
-#### Environment variables
+The bot runs entirely on GitHub Actions, so there's no server to maintain.
 
-In your repo's settings, under *Secrets and variables* > *Actions* you need to enter two Secrets to match your `.env` file. One secret should be called `BSKY_HANDLE` and contain your Bluesky username, and the other should be called `BSKY_PASSWORD` and contain your App Password that you generated for the bot account.
+1. In the repo, go to **Settings → Secrets and variables → Actions** and add three repository secrets: `BSKY_HANDLE`, `BSKY_PASSWORD`, and `TMDB_TOKEN`.
+2. Push to `main`. The workflow runs on its cron schedule, and you can also trigger it manually from the **Actions** tab with **Run workflow**.
 
-### Set it live
+To change the posting time, edit the `cron` line in [`post.yml`](./.github/workflows/post.yml). Times are in UTC, and [crontab.guru](https://crontab.guru/) is handy for checking them. Scheduled runs often start a few minutes late.
 
-Once the schedule is set up and your Environment variables configured, push your changes to your repo and wait for the schedule to trigger the workflow. Your bot will start publishing posts based on your code.
+> [!NOTE]
+> GitHub automatically disables scheduled workflows after 60 days with no commits to the repo, and emails you first. If the bot goes quiet, check the **Actions** tab and click **Enable workflow**.
 
-If you have any issues with that, please [raise an issue in this repo](https://github.com/philnash/bsky-bot/issues) or send me a message on Bluesky [@philna.sh](https://staging.bsky.app/profile/philna.sh).
+## Credits
+
+- This product uses the TMDB API but is not endorsed or certified by TMDB.
+- Built from Phil Nash's [bsky-bot](https://github.com/philnash/bsky-bot) template.
+
+## License
+
+[MIT](./LICENSE)
