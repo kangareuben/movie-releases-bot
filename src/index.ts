@@ -1,8 +1,10 @@
 import Bot from "./lib/bot.js";
 import getPostText from "./lib/getPostText.js";
 
-const text = async () => {
-	await Bot.run(getPostText);
-};
+const text = await Bot.run(getPostText);
 
-console.log(`[${new Date().toISOString()}] Posted: "${text}"`);
+if (text === null) {
+	console.log(`[${new Date().toISOString()}] No releases found today, nothing posted.`);
+} else {
+	console.log(`[${new Date().toISOString()}] Posted: "${text}"`);
+}

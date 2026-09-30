@@ -1,26 +1,42 @@
-export default async function getPostText() {
-  // Generate the text for your post here. You can return a string or a promise that resolves to a string
-  var today = new Date();
-  var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0');
-  var yyyy = today.getFullYear();
+import { tmdbToken } from "./config.js";
 
-  var todaysDate = yyyy + '-' + mm + '-' + dd;
-  var maxVariablePostChars = 225;
-  
+const maxVariablePostChars = 225;
+
+interface TmdbMovie {
+  title: string;
+  overview: string;
+}
+
+// Returns null when no movies were released today, so the bot can skip posting.
+export default async function getPostText(): Promise<string | null> {
+  // GitHub Actions runners use UTC, so "today" is the UTC date
+  const todaysDate = new Date().toISOString().slice(0, 10);
+  const yyyy = todaysDate.slice(0, 4);
+
   const url = 'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&primary_release_year=' + yyyy + '&primary_release_date.gte=' + todaysDate + '&primary_release_date.lte=' + todaysDate + '&release_date.gte=' + todaysDate + '&release_date.lte=' + todaysDate + '&sort_by=popularity.desc';
   const options = {
     method: 'GET',
     headers: {
       accept: 'application/json',
-      Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZTllNTQ3ZjQ5ZmM2Yzg4YzYyNGJlMjhiOTdhMjJmNCIsIm5iZiI6MTczMzU0Mzc1OC4yMjEsInN1YiI6IjY3NTNjNzRlZGYzYWU5N2UxYzJmNDA0NCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.u2tpTIDcWYBh3RsMaZcNKEkdXuDyfnJ6h7lRp029vAE'
+      Authorization: 'Bearer ' + tmdbToken,
     }
   };
 
-  return new Promise<string>((resolve) => {
-    fetch(url, options)
-    .then(res => res.json())
-    .then(json => resolve('Released today: ' + json.results[0].title + '\n\n' + (json.results[0].overview.length > maxVariablePostChars - json.results[0].title.length ? (json.results[0].overview.substring(0, maxVariablePostChars - json.results.title.length - 3) + '...') : json.results[0].overview) + '\n\nRetrieved via The Movie Database API (themoviedb.org).'))
-    .catch(err => console.error(err))
-	});
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    throw new Error(`TMDB request failed: ${res.status} ${res.statusText}`);
+  }
+  const json = await res.json() as { results?: TmdbMovie[] };
+
+  const movie = json.results?.[0];
+  if (!movie) {
+    return null;
+  }
+
+  const maxOverviewChars = maxVariablePostChars - movie.title.length;
+  const overview = movie.overview.length > maxOverviewChars
+    ? movie.overview.substring(0, maxOverviewChars - 3) + '...'
+    : movie.overview;
+
+  return 'Released today: ' + movie.title + '\n\n' + overview + '\n\nRetrieved via The Movie Database API (themoviedb.org).';
 }

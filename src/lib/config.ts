@@ -6,6 +6,7 @@ const envSchema = z.object({
   BSKY_HANDLE: z.string().min(1),
   BSKY_PASSWORD: z.string().min(1),
   BSKY_SERVICE: z.string().min(1).default("https://bsky.social"),
+  TMDB_TOKEN: z.string().min(1),
 });
 
 const parsed = envSchema.parse(env);
@@ -16,3 +17,5 @@ export const bskyAccount: AtpAgentLoginOpts = {
 };
 
 export const bskyService = parsed.BSKY_SERVICE;
+
+export const tmdbToken = parsed.TMDB_TOKEN;

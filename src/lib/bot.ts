@@ -49,15 +49,18 @@ export default class Bot {
   }
 
   static async run(
-    getPostText: () => Promise<string>,
+    getPostText: () => Promise<string | null>,
     botOptions?: Partial<BotOptions>,
   ) {
     const { service, dryRun } = botOptions
       ? Object.assign({}, this.defaultOptions, botOptions)
       : this.defaultOptions;
+    const text = (await getPostText())?.trim() ?? null;
+    if (text === null) {
+      return null;
+    }
     const bot = new Bot(service);
     await bot.login(bskyAccount);
-    const text = (await getPostText()).trim();
     if (!dryRun) {
       await bot.post(text);
     } else {
