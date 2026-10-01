@@ -20,7 +20,7 @@ On days with no releases, the bot skips posting.
 
 - [`src/lib/getPostText.ts`](./src/lib/getPostText.ts) queries TMDB's `/discover/movie` endpoint for today's date (UTC), sorted by popularity, and formats the top result. It trims long synopses so the post stays under Bluesky's 300-character limit.
 - [`src/lib/bot.ts`](./src/lib/bot.ts) logs in to Bluesky with [`@atproto/api`](https://www.npmjs.com/package/@atproto/api) and publishes the post.
-- [`.github/workflows/post.yml`](./.github/workflows/post.yml) runs the bot on a schedule with GitHub Actions, daily at 13:08 UTC.
+- [`.github/workflows/post.yml`](./.github/workflows/post.yml) runs the bot on a schedule with GitHub Actions, daily at 13:13 UTC.
 
 ## Running locally
 
