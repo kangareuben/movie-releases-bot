@@ -1,6 +1,6 @@
 name: "Post to Bluesky"
 
-# Triggered daily at 13:13 UTC by an external scheduler (cron-job.org) calling
+# Triggered daily at 9:13 AM US Eastern by an external scheduler (cron-job.org) calling
 # the workflow_dispatch API. GitHub's own `schedule:` trigger was unreliable
 # for this repo, silently skipping runs. It can also be run manually from the
 # Actions tab.

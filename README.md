@@ -20,7 +20,7 @@ On days with no releases, the bot skips posting.
 
 - [`src/lib/getPostText.ts`](./src/lib/getPostText.ts) queries TMDB's `/discover/movie` endpoint for today's date (UTC), sorted by popularity, and formats the top result. It trims long synopses so the post stays under Bluesky's 300-character limit.
 - [`src/lib/bot.ts`](./src/lib/bot.ts) logs in to Bluesky with [`@atproto/api`](https://www.npmjs.com/package/@atproto/api) and publishes the post.
-- [`.github/workflows/post.yml`](./.github/workflows/post.yml) runs the bot on GitHub Actions. An external scheduler ([cron-job.org](https://cron-job.org)) triggers it daily at 13:13 UTC.
+- [`.github/workflows/post.yml`](./.github/workflows/post.yml) runs the bot on GitHub Actions. An external scheduler ([cron-job.org](https://cron-job.org)) triggers it daily at 9:13 AM US Eastern time.
 
 ## Running locally
 
@@ -67,7 +67,7 @@ The bot runs on GitHub Actions, so there's no server to maintain.
 
 ### Daily schedule
 
-GitHub's built-in `schedule:` trigger silently skipped runs for this repo, so the daily post is triggered from outside GitHub instead. A [cron-job.org](https://cron-job.org) job runs at 13:13 UTC and sends:
+GitHub's built-in `schedule:` trigger silently skipped runs for this repo, so the daily post is triggered from outside GitHub instead. A [cron-job.org](https://cron-job.org) job runs daily at 9:13 AM US Eastern time (`America/New_York`) and sends:
 
 ```http
 POST https://api.github.com/repos/kangareuben/movie-releases-bot/actions/workflows/post.yml/dispatches
