@@ -14,7 +14,7 @@ Lowen Ashleigh is hired by Jeremy Crawford to ghostwrite novels for his bestsell
 Retrieved via The Movie Database API (themoviedb.org).
 ```
 
-On days with no releases, the bot skips posting.
+Movies without an English synopsis on TMDB are skipped in favor of the next most popular release. On days with no such releases, the bot skips posting.
 
 ## How it works
 

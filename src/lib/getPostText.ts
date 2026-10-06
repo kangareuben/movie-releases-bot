@@ -7,7 +7,8 @@ interface TmdbMovie {
   overview: string;
 }
 
-// Returns null when no movies were released today, so the bot can skip posting.
+// Returns null when no movies with an English overview were released today,
+// so the bot can skip posting.
 export default async function getPostText(): Promise<string | null> {
   // GitHub Actions runners use UTC, so "today" is the UTC date
   const todaysDate = new Date().toISOString().slice(0, 10);
@@ -28,7 +29,8 @@ export default async function getPostText(): Promise<string | null> {
   }
   const json = await res.json() as { results?: TmdbMovie[] };
 
-  const movie = json.results?.[0];
+  // Skip movies with no English overview (TMDB returns an empty string)
+  const movie = json.results?.find((m) => m.overview.trim() !== '');
   if (!movie) {
     return null;
   }
